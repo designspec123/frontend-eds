@@ -22,13 +22,13 @@ console.log(user,"user")
 }
     },[data])
     return <form action={action}>
-        <div className="space-y-6">
+        <div className="space-y-6 text-white">
             <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className=" text-white pb-2">Email</Label>
                 <Input required id="email" name="email" type="email" defaultValue={""} autoComplete="email" />
             </div>
             <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className=" text-white pb-2">Password</Label>
                 <Input required id="password" name="password" type="password" defaultValue={""} autoComplete="email" />
             </div>
             <LoginButton />

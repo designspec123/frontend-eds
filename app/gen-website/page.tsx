@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useOutputStore } from "./useOutputStore";
+import { useOutputStore } from "../useOutputStore";
+import { ArrowBigLeft, BackpackIcon } from "lucide-react";
+import Link from "next/link";
 
 
 
@@ -107,10 +109,17 @@ const router=useRouter()
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h2 className="text-2xl font-bold">Choose how to transform a web page</h2>
+    <div className="container mx-auto p-4 space-y-6 h-screen bg-cover  "     style={{
+      background:"url('/images/eds-bg.jpg')"
+    }}>
+        <div >
+            <Link href="/">
+            <ArrowBigLeft className=" text-white  " /></Link>
+        </div>
+    <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-white text-center mt-10 mb-10">Choose how to transform a web page</h2>
 
-      <Card className="border border-amber-400 shadow-xl">
+      <Card className=" shadow-xl bg-pink-400/50 text-white ">
         <CardHeader>
           <div className="space-y-2">
             <Label htmlFor="browse-mode">Browse Mode</Label>
@@ -200,6 +209,7 @@ const router=useRouter()
           )} */}
         </CardFooter>
       </Card>
+    </div>
     </div>
   );
 }

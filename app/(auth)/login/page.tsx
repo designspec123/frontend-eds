@@ -2,15 +2,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LoginForm from "./login-form"
 
 const Login = () => {
-    return <div className="w-full max-w-md mx-auto mt-20">
-        <Card>
-            <CardHeader className="space-y-4">  <CardTitle className="text-center text-2xl">Login</CardTitle>
-                <CardDescription className="text-center">Login to your account</CardDescription></CardHeader>
+    return <div
+    className="h-screen "
+      style={{
+      background:"url('/images/eds-bg.jpg')"
+    }}>
+   <div className="w-full max-w-md mx-auto pt-20">
+        <Card className=" bg-pink-400/30">
+            <CardHeader className="space-y-4  text-white">  <CardTitle className="text-center text-2xl">Login</CardTitle>
+                <CardDescription className="text-center  text-white">Login to your account</CardDescription></CardHeader>
 <CardContent>
    <LoginForm/> 
 </CardContent>
 
         </Card>
     </div>
+    </div>
+    
+ 
 }
 export default Login

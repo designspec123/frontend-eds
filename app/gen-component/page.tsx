@@ -15,6 +15,8 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useOutputStore } from "../useOutputStore";
+import Link from "next/link";
+import { ArrowBigLeft } from "lucide-react";
 
 
 type ComponentRequest = {
@@ -95,10 +97,17 @@ export default function ComponentGenerator() {
   };
 
   return (
-    <div className="container mx-auto p-4 flex flex-col items-center">
-      <h2 className="text-2xl font-bold mb-6">Generate UI Components</h2>
+    <div className="container  h-screen bg-cover text-white "     style={{
+      background:"url('/images/eds-bg.jpg')"
+    }}>
+       <div className="pl-5 pt-5" >
+            <Link href="/">
+            <ArrowBigLeft className=" text-white  " /></Link>
+        </div>
+    <div className="mt-30 flex flex-col items-center justify-center w-full">
+        <h2 className="text-2xl font-bold mb-6">Generate UI Components</h2>
 
-      <Button onClick={addComponent} className="mb-6">
+      <Button onClick={addComponent} className="mb-6 backdrop-blur-md bg-white/30 text-black-500">
         Add Component
       </Button>
 
@@ -153,6 +162,7 @@ export default function ComponentGenerator() {
                           type="number"
                           min={1}
                           max={10}
+                          className="backdrop-blur-md bg-white/30 text-black-500"
                           value={component.details.num_radio || 2}
                           onChange={(e) => {
                             const num = parseInt(e.target.value);
@@ -166,6 +176,7 @@ export default function ComponentGenerator() {
                           <div key={i}>
                             <Label>Radio Button {i + 1} Label</Label>
                             <Input
+                            className="backdrop-blur-md bg-white/30 text-black-500"
                               value={component.details.radio_labels?.[i] || ""}
                               onChange={(e) => {
                                 const labels = [...(component.details.radio_labels || Array(component.details.num_radio || 2).fill(""))];
@@ -187,6 +198,7 @@ export default function ComponentGenerator() {
                           type="number"
                           min={1}
                           max={10}
+                          className="backdrop-blur-md bg-white/30 text-black-500"
                           value={component.details.num_dropdown || 2}
                           onChange={(e) => {
                             const num = parseInt(e.target.value);
@@ -200,6 +212,7 @@ export default function ComponentGenerator() {
                           <div key={i}>
                             <Label>Dropdown Option {i + 1} Label</Label>
                             <Input
+                            className="backdrop-blur-md bg-white/30 text-black-500"
                               value={component.details.dropdown_labels?.[i] || ""}
                               onChange={(e) => {
                                 const labels = [...(component.details.dropdown_labels || Array(component.details.num_dropdown || 2).fill(""))];
@@ -219,7 +232,7 @@ export default function ComponentGenerator() {
         </Accordion>
       </div>
 
-      <Button onClick={generateComponents} className="mb-6">
+      <Button onClick={generateComponents} className="mb-6 backdrop-blur-md bg-white/30 text-black-500">
         Generate Components
       </Button>
 
@@ -239,6 +252,7 @@ export default function ComponentGenerator() {
           </CardContent>
         </Card>
       )}
+    </div>
     </div>
   );
 }
