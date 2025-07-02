@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useOutputStore } from "../useOutputStore";
 import { ArrowBigLeft, BackpackIcon } from "lucide-react";
 import Link from "next/link";
-
+import axios from 'axios'
 
 
 
@@ -46,70 +46,52 @@ const router=useRouter()
  
   };
 
-  const transformFromUrl = async () => {
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
-
+const transformFromUrl=async(e:any)=>{
+      e.preventDefault();
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real implementation, you would call your API here
-      // const response = await fetch('/api/transform', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ url: urlInput }),
-      //   headers: { 'Content-Type': 'application/json' }
-      // });
-      // const data = await response.json();
-      addOutput(`<html>
-        <body>
-        <p className=""bg-teal-500>hello</p>
-        </body>
-
-        </html>`)
-      const filename = urlInput.split("/").pop() || "url_page.html";
-
-      setSuccess(`Successfully transformed website from URL: ${filename}`);
-        router.push('/output')
-    } catch (err) {
-      setError(`Error processing URL: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsProcessing(false);
+      const res = await axios.post("http://localhost:8000/transform/url", {url: urlInput });
+   
+      addOutput(res.data.transformed_content);
+      router.push('/output')
+    } catch (error) {
+      console.error(error);
     }
-  };
+}
 
-  const transformFromFiles = async () => {
-    setIsProcessing(true);
-    setError(null);
-    setSuccess(null);
+const transformFromFiles = async () => {
+  setIsProcessing(true);
+  setError(null);
+  setSuccess(null);
 
-    try {
-      // Simulate API calls for each file
-      await Promise.all(
-        uploadedFiles.map(async (file) => {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          // In a real implementation:
-          // const content = await file.text();
-          // const response = await fetch('/api/transform', {
-          //   method: 'POST',
-          //   body: JSON.stringify({ content, filename: file.name }),
-          //   headers: { 'Content-Type': 'application/json' }
-          // });
-          // return await response.json();
-        })
-      );
+  try {
+    const responses = await Promise.all(
+      uploadedFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
 
-      setSuccess(`Successfully transformed ${uploadedFiles.length} file(s)`);
-    } catch (err) {
-      setError(`Error processing files: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+        const res = await axios.post("http://localhost:8000/transform/file", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        return res.data.transformed_content;
+      })
+    );
+
+    responses.forEach((output: string) => addOutput(output));
+    setSuccess(`Successfully transformed ${uploadedFiles.length} file(s)`);
+    router.push("/output");
+  } catch (err) {
+    setError(`Error processing files: ${err instanceof Error ? err.message : "Unknown error"}`);
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   return (
-    <div className="container mx-auto p-4 space-y-6 h-screen bg-cover  "     style={{
+    <div className="  h-screen bg-cover  "     style={{
       background:"url('/images/eds-bg.jpg')"
     }}>
         <div >
@@ -193,20 +175,7 @@ const router=useRouter()
         </CardContent>
 
         <CardFooter className="flex flex-col items-start gap-4">
-          {/* {error && (
-            <Alert variant="destructive">
-              <ExclamationTriangleIcon className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert>
-              <CheckCircledIcon className="h-4 w-4" />
-              <AlertTitle>Success</AlertTitle>
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )} */}
+     {/* //error */}
         </CardFooter>
       </Card>
     </div>

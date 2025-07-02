@@ -20,7 +20,7 @@ const LandingPage=()=>{
   <div >
     <Menu/>
   </div>
-  <div className="text-white">John Doe</div>
+  <div className="text-white"></div>
 </div>
 </div>
 
@@ -34,14 +34,14 @@ const LandingPage=()=>{
         <div className=" rounded-2xl text-white w-40 h-40 transform rotate-45 bg-white/20 border border-white/30 hover:bg-white/20 transition duration-300 shadow-lg">
           <div className="transform -rotate-45 flex items-center justify-center h-full">
            <Link href="/gen-component">
-            <p className="text-center font-semibold">Design a Website</p>
+            <p className="text-center font-semibold">Generate Component</p>
            </Link>
           </div>
         </div>
             <div className=" rounded-2xl text-white w-40 h-40 transform rotate-45 bg-white/20 border border-white/30 hover:bg-white/20 transition duration-300 shadow-lg">
           <div className="transform -rotate-45 flex items-center justify-center h-full">
             <Link href="/gen-website">
-            <p className="text-center font-semibold">Design a Website Components</p>
+            <p className="text-center font-semibold">Design a Website </p>
             </Link>
           </div>
         </div>

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useOutputStore } from "../useOutputStore";
 import Link from "next/link";
 import { ArrowBigLeft } from "lucide-react";
+import axios from "axios"
 
 
 type ComponentRequest = {
@@ -32,7 +33,11 @@ type ComponentRequest = {
 
 export default function ComponentGenerator() {
       const reset = useOutputStore((state) => state.reset);
-  
+    
+   
+     const addOutput = useOutputStore((state) => state.addOutput);
+
+
     useEffect(() => {
       reset();
     }, [reset]);
@@ -77,7 +82,7 @@ export default function ComponentGenerator() {
     setComponentRequests(updated);
   };
 
-  const generateComponents = () => {
+  const generateComponents = async (e:any) => {
     const prompts = componentRequests.map((component) => {
       if (component.type === "Button" && component.details.button_type) {
         return `Generate a ${component.details.button_type.toLowerCase()} button using Tailwind CSS.`;
@@ -91,13 +96,24 @@ export default function ComponentGenerator() {
       return "";
     }).filter(prompt => prompt !== "");
 
-    setGeneratedComponents(prompts);
-     router.push('/output')
+ 
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:8000/generate/components", { prompt:prompts });
+  
+      addOutput(res.data.generated_components)
+      router.push("/output")
+      
+    } catch (error) {
+      console.error(error);
+    
+  };
+   
  
   };
 
   return (
-    <div className="container  h-screen bg-cover text-white "     style={{
+    <div className="  h-screen bg-cover text-white "     style={{
       background:"url('/images/eds-bg.jpg')"
     }}>
        <div className="pl-5 pt-5" >
