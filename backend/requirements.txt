@@ -1,0 +1,17 @@
+streamlit
+langchain
+faiss-cpu
+langchain-community
+python-dotenv
+langchain-text-splitters
+sentence_transformers
+langchain_huggingface
+langchain_groq
+bs4
+langchain_google_genai
+langchain-openai
+langchain-cohere
+fastapi
+uvicorn
+python-multipart
+httpx
