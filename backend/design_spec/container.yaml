@@ -1,0 +1,11 @@
+design_spec:
+  version: "1.0"
+
+  components:
+    navbar:
+      description: >
+        - Sample
+      output_sample: |
+      <div class="poc-ds-container"></div>
+
+

@@ -1,0 +1,6 @@
+- Replace all relative image paths (e.g., 'images/logo.png') with absolute URLs for example :https://example.com/images/logo.jpg
+
+
+
+
+

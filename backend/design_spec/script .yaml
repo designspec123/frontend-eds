@@ -1,0 +1,20 @@
+design_spec:
+  version: "1.0"
+
+  components:
+    javascript:
+      description: >
+        - If a user request contains a <script> tag, return a cleaned version: <script></script>.
+        - For example:
+
+            <script>
+            function myFunction() {
+            }
+            </script>
+
+          Should be converted to:
+
+            <script></script>
+      output_sample: |
+        <script></script>
+

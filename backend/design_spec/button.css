@@ -1,0 +1,10 @@
+.poc-ds-button.poc-ds-button--primary {
+  padding: 0.5rem 1rem;
+  background-color: #002561;
+  color: #FFFFFF;
+  border-radius: 4px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}

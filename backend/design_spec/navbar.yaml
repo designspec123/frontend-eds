@@ -1,0 +1,24 @@
+design_spec:
+  version: "1.0"
+
+  components:
+    navbar:
+      description: >
+        - If a horizontal navbar is detected, transform it to the style shown below.
+      output_sample: |
+        <!-- Custom Design System Navbar -->
+        <nav class="poc-ds-navbar poc-ds-navbar--dark">
+          <!-- Left Section -->
+          <div class="poc-ds-navbar-left">
+            <span class="poc-ds-navbar-logo">Company Logo</span>
+            <!-- Add all the navbar items in left to right order -->
+            <ul class="poc-ds-navbar-menu">
+              <li class="poc-ds-nav-item">item 1</li>
+              <li class="poc-ds-nav-item">item 2</li>
+            </ul>
+          </div>
+
+          <!-- Right Section -->
+          <div class="poc-ds-navbar-signin-icon"></div>
+        </nav>
+

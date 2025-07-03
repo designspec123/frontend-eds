@@ -1,0 +1,40 @@
+.poc-ds-navbar.poc-ds-navbar--dark {
+  background-color: #002561;
+  color: #FFFFFF;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.poc-ds-navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.poc-ds-navbar-logo {
+  height: 40px;
+  margin-right: 2rem;
+  display: inline-block;
+}
+
+.poc-ds-navbar-menu {
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.poc-ds-navbar-signin-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  background-image: url('path-to-your-icon.svg');
+  background-size: 60%;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: inline-block;
+}

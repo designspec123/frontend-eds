@@ -1,0 +1,14 @@
+.poc-ds-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+.poc-ds-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  border-left: 3px solid #002561;
+  padding-left: 1rem;
+}
