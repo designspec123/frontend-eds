@@ -33,7 +33,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # Initialize LLM and vector EmBeddings Begin***********************************
 # Initialize embeddings
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-ds_components = ["button", "card", "container", "heading", "image", "list", "navbar", "timeline" , "script" ,"text" , "sidebar"]
+ds_components = ["button", "card", "container", "heading", "image", "list", "sidebar", "timeline" , "script" ,"text" , "navbar"]
 class LLMProvider(Enum):
     GROQ = "gemma2-9b-it"#"llama3-70b-8192" #"llama3-8b-instruct" #"gemma2-9b-it" "deepseek-r1-distill-llama-70b"
     GEMINI = "gemma-3-27b-it" #gemma-3-27b-it gemini-2.0-flash-lite 
@@ -41,7 +41,7 @@ class LLMProvider(Enum):
     COHERE = "command-a-03-2025"
 
 load_dotenv()
-SELECTED_LLM = LLMProvider.GEMINI  # Change to LLMProvider.GROQ to use Groq
+SELECTED_LLM = LLMProvider.GROQ  # Change to LLMProvider.GROQ to use Groq
 
 if SELECTED_LLM == LLMProvider.GROQ:
     api_key = os.getenv("GROQ_API_KEY")
@@ -231,7 +231,7 @@ def strip_outer_tags(html_block):
     return html_block.strip()
 
 
-def save_correction_prompt_response_to_file(output_folder_path, correction_chunk_filename, correction_prompt, correction_prompt_response, corrected_output_requirements_str):
+def save_correction_prompt_response_to_file_old(output_folder_path, correction_chunk_filename, correction_prompt, correction_prompt_response, corrected_output_requirements_str):
     
     correction_prompt_response_path = os.path.join(output_folder_path, correction_chunk_filename + "_correction_prompt_reponse.txt")
     with open(correction_prompt_response_path, "w", encoding="utf-8") as f:
@@ -256,6 +256,38 @@ def save_correction_prompt_response_to_file(output_folder_path, correction_chunk
 
             # Output in exact dict-like string format
             f.write(f"{{'role': '{role}', 'content': '{content}'}}\n\n")
+
+def save_correction_prompt_response_to_file(output_folder_path, correction_chunk_filename, correction_prompt, correction_prompt_response, corrected_output_requirements_str):
+    # Save LLM correction response
+    correction_prompt_response_path = os.path.join(output_folder_path, correction_chunk_filename + "_correction_prompt_response.txt")
+    with open(correction_prompt_response_path, "w", encoding="utf-8") as f:
+        f.write(correction_prompt_response)
+
+    # Save correction prompt text
+    chunk_file_path = os.path.join(output_folder_path, correction_chunk_filename + "_correction_prompt.txt")
+    with open(chunk_file_path, "w", encoding="utf-8") as f:
+        # Get user content from correction_prompt dict
+        #user_content = correction_prompt.get("user", "")
+        user_content = correction_prompt
+
+        # Add extra newline before each '###' header for readability
+        content_lines = user_content.split("\n")
+        updated_lines = []
+        for line in content_lines:
+            if line.strip().startswith("###"):
+                updated_lines.append("")  # blank line before header
+            updated_lines.append(line)
+        formatted_content = "\n".join(updated_lines)
+
+        # Write prompt as a plain string
+        f.write(formatted_content)
+
+    # Optionally save corrected output requirements separately
+    if corrected_output_requirements_str:
+        requirements_path = os.path.join(output_folder_path, correction_chunk_filename + "_corrected_output_requirements.txt")
+        with open(requirements_path, "w", encoding="utf-8") as f:
+            f.write(corrected_output_requirements_str)
+
 
 def save_prompt_response_to_file(output_folder_path, chunk_filename, formatted_prompt, response, summary):
     chunk_file_path = os.path.join(output_folder_path, chunk_filename + "_.txt")
@@ -438,7 +470,56 @@ Generate HTML strictly following the provided design standard.
 ### Output:
 """.strip()
 
+
 def create_correction_prompt(transformation_prompt, generated_html_output):
+    if isinstance(transformation_prompt, list):
+        user_content = next((item["content"] for item in transformation_prompt if item["role"] == "user"), "")
+    else:
+        user_content = transformation_prompt
+
+    user_prompt = f"""
+### Original Transformation Prompt
+{user_content}
+
+---
+
+### Transformed HTML Output
+{generated_html_output}
+
+---
+
+### Instructions
+You are a UI/UX Transformation Reviewer.
+
+Your task:
+1. Analyze the transformed HTML against the original transformation instructions.
+2. Identify any issues in visual layout, structure, or functionality.
+
+---
+
+### Response format:
+1. Start with:
+   - `# Complaint Issue List`
+     - List issues as `- **[Issue Label]:** Explanation`.
+   - Or `# No Complaint Issue` if no issues.
+2. Then write:
+   - `## MANDATORY OUTPUT RULES:`
+     - Restate all original mandatory rules from the transformation prompt.
+     - Append fixes and improvements for each issue.
+
+---
+
+### Constraints:
+- Do NOT rewrite the HTML.
+- Only return the two sections above, nothing else.
+""".strip()
+
+    return {
+        "user": user_prompt
+    }
+
+
+def create_correction_prompt_old(transformation_prompt, generated_html_output):
     if isinstance(transformation_prompt, list):
         user_content = next((item["content"] for item in transformation_prompt if item["role"] == "user"), "")
     else:
@@ -872,7 +953,7 @@ def transform_new_website_chunk(body_doc, url, filename):
     output_requirements = load_output_requirements("output_requirement")
     for index, chunk in enumerate(final_chunks):
         summary , components = summarize_html_chunk(chunk,ds_components)
-        print("post summarize")
+        #print("post summarize " + components)
         design_standard_css = retrieve_design_standard(components, vectorstore_with_css)
         design_standard_yaml = retrieve_design_standard(components, vectorstore_with_yaml)
 
@@ -887,7 +968,7 @@ def transform_new_website_chunk(body_doc, url, filename):
         
 
         # ------------------ Correction Loop Start ------------------
-        correction_needed = 0
+        correction_needed = 1
         correction_iteration = 0
         max_corrections = 2
 
@@ -898,13 +979,8 @@ def transform_new_website_chunk(body_doc, url, filename):
 
         while correction_needed and correction_iteration < max_corrections:
             correction_prompt = create_correction_prompt(formatted_prompt, response)
-            correction_prompt_messages = [
-                {"role": "system", "content": correction_prompt["system"]},
-                {"role": "user", "content": correction_prompt["user"]}
-            ]
-
-         
-            correction_response = llm.invoke(correction_prompt_messages).content.strip()
+            correction_user_prompt = correction_prompt.get("user", "")
+            correction_response = llm.invoke(correction_user_prompt).content.strip()
             corrected_output_requirements_match = re.search(r"## MANDATORY OUTPUT RULES:\s*(.*?)(?=\n##|\Z)", correction_response, re.DOTALL)
 
             corrected_output_requirements_str = ""
@@ -916,7 +992,7 @@ def transform_new_website_chunk(body_doc, url, filename):
             corrected_output_requirements_str = corrected_output_requirements_match.group(1).strip()
             
             correction_chunk_filename = f"correction_prompt_{index+1:02d}_iter{correction_iteration+1}"
-            save_correction_prompt_response_to_file(output_folder_path, correction_chunk_filename, correction_prompt_messages, correction_response, corrected_output_requirements_str)
+            save_correction_prompt_response_to_file(output_folder_path, correction_chunk_filename, correction_user_prompt, correction_response, corrected_output_requirements_str)
 
             if "# No Complaint Issue" in correction_response:
                 correction_needed = False
