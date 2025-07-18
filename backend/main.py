@@ -35,16 +35,29 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 ds_components = ["button", "card", "container", "heading", "image", "list", "sidebar", "timeline" , "script" ,"text" , "navbar"]
 class LLMProvider(Enum):
-    GROQ = "gemma2-9b-it"#"llama3-70b-8192" #"llama3-8b-instruct" #"gemma2-9b-it" "deepseek-r1-distill-llama-70b"
+    GROQ = "gemma2-9b-it" #"llama3-70b-8192" #"llama3-8b-instruct" #"gemma2-9b-it" "deepseek-r1-distill-llama-70b"
     GEMINI = "gemma-3-27b-it" #gemma-3-27b-it gemini-2.0-flash-lite 
     OPENAI = "gpt-4o-mini"  # Or "gpt-4" or "gpt-3.5-turbo"
     COHERE = "command-a-03-2025"
 
 load_dotenv()
-SELECTED_LLM = LLMProvider.GROQ  # Change to LLMProvider.GROQ to use Groq
+SELECTED_LLM = LLMProvider.GEMINI  # Change to LLMProvider.GROQ to use Groq
+CORRECTION_LLM = LLMProvider.GROQ  # Change to LLMProvider.GROQ to use Groq
+
+if CORRECTION_LLM == LLMProvider.GROQ:
+    api_key = os.getenv("GROQ_API_KEY")
+    print(api_key)
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found for correction")
+    correction_llm = ChatGroq(
+        groq_api_key=api_key,
+        model_name=CORRECTION_LLM.value,
+        temperature=0.1
+    )
 
 if SELECTED_LLM == LLMProvider.GROQ:
     api_key = os.getenv("GROQ_API_KEY")
+    print(api_key)
     if not api_key:
         raise ValueError("GROQ_API_KEY not found.")
     llm = ChatGroq(
@@ -316,20 +329,11 @@ def save_prompt_response_to_file(output_folder_path, chunk_filename, formatted_p
         
         #f.write(f"# Response:\n{response}\n")
 
-def inline_css_from_file(html_content, css_file_path):
-    """
-    Replaces <link rel="stylesheet" href="poc-ds.css"> with minified inline CSS wrapped in <style> tags.
+import os
+import re
 
-    Args:
-        html_content (str): The original HTML content.
-        css_file_path (str): Path to the CSS file to inline.
-
-    Returns:
-        str: HTML content with inline CSS.
-    """
-    import os
-    import re
-
+def minify_css_file(css_file_path):
+   
     # Check if file exists
     if not os.path.exists(css_file_path):
         raise FileNotFoundError(f"CSS file not found: {css_file_path}")
@@ -343,6 +347,13 @@ def inline_css_from_file(html_content, css_file_path):
     css_minified = re.sub(r'\s+', ' ', css_minified)                      # Collapse all whitespace
     css_minified = re.sub(r'\s*([{};:,])\s*', r'\1', css_minified)         # Tighten spaces around {}:;,
     css_minified = css_minified.strip()
+
+    return css_minified
+
+
+def inline_css_from_file(html_content, css_file_path):
+
+    css_minified = minify_css_file(css_file_path)
 
     # Wrap minified CSS in <style> tag
     inline_style_tag = f"<style>{css_minified}</style>"
@@ -923,7 +934,7 @@ def extract_body_chunks(html_content, max_chunk_size=500):
 
     def is_semantic_split(tag: Tag):
         """Generic semantic split points without relying on class names."""
-        return tag.name in ['section', 'article', 'main', 'header', 'div', 'footer', 'script', 'nav']
+        return tag.name in ['section', 'article', 'main', 'header', 'div', 'footer', 'script']
 
     for element in body.children:
         if isinstance(element, Tag):
@@ -949,12 +960,16 @@ def transform_new_website_chunk(body_doc, url, filename):
     output_folder_path = create_output_folder_path(folder_name)
     chunk_indo_filename = f"chunks_info_{filename}.txt"
     save_chunks_to_file(output_folder_path, final_chunks, chunk_indo_filename)
+    css_file_path = os.path.join(OUTPUT_DIR, "poc-ds.css")
 
     output_requirements = load_output_requirements("output_requirement")
     for index, chunk in enumerate(final_chunks):
         summary , components = summarize_html_chunk(chunk,ds_components)
         #print("post summarize " + components)
         design_standard_css = retrieve_design_standard(components, vectorstore_with_css)
+        #design_standard_css = minify_css_file(css_file_path)
+        #design_standard_yaml = ""
+
         design_standard_yaml = retrieve_design_standard(components, vectorstore_with_yaml)
 
         formatted_prompt = create_transform_prompt(output_requirements, chunk, summary, design_standard_css, design_standard_yaml)
@@ -968,7 +983,7 @@ def transform_new_website_chunk(body_doc, url, filename):
         
 
         # ------------------ Correction Loop Start ------------------
-        correction_needed = 1
+        correction_needed = 0
         correction_iteration = 0
         max_corrections = 2
 
@@ -980,7 +995,7 @@ def transform_new_website_chunk(body_doc, url, filename):
         while correction_needed and correction_iteration < max_corrections:
             correction_prompt = create_correction_prompt(formatted_prompt, response)
             correction_user_prompt = correction_prompt.get("user", "")
-            correction_response = llm.invoke(correction_user_prompt).content.strip()
+            correction_response = correction_llm.invoke(correction_user_prompt).content.strip()
             corrected_output_requirements_match = re.search(r"## MANDATORY OUTPUT RULES:\s*(.*?)(?=\n##|\Z)", correction_response, re.DOTALL)
 
             corrected_output_requirements_str = ""
@@ -1022,7 +1037,7 @@ def transform_new_website_chunk(body_doc, url, filename):
     # Join final body content
     join_without_llm = 1
     if join_without_llm:
-        final_body = "\n".join(f'<section class="py-1"><div class="container">\n{chunk}\n</div></section>' for chunk in transformed_chunks)
+        final_body = "\n".join(f'\n{chunk}' for chunk in transformed_chunks)
     else:
         join_prompt = create_join_prompt(transformed_chunks, filename)
         final_body = llm.invoke(join_prompt).content.strip()
@@ -1060,13 +1075,13 @@ def transform_new_website_chunk(body_doc, url, filename):
     </html>
     """
 
-    
     body_output_file_path = os.path.join(output_folder_path, f"body_transformed_{filename}")
     with open(body_output_file_path, "w", encoding="utf-8") as f:
         f.write(final_body)
 
-    css_file_path = os.path.join(OUTPUT_DIR, "poc-ds.css")
+   
     final_html = inline_css_from_file(final_html, css_file_path)
+   
 
     output_file_path = os.path.join(OUTPUT_DIR, f"transformed_{filename}")
     with open(output_file_path, "w", encoding="utf-8") as f:
@@ -1326,6 +1341,8 @@ class PromptInput(BaseModel):
 
 @app.post("/generate/components")
 async def generate_from_prompt(data: PromptInput):
+    print("Generate Prompt")
+    print(data.prompt)
     result = generate_components(data.prompt)
     return {"generated_components": result}
 
